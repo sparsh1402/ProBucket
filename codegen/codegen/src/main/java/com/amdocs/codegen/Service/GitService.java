@@ -8,9 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,18 +39,6 @@ public class GitService {
         return projectNames;
     }
 
-    // Create a new project
-//    public void createNewProject(String projectName) throws IOException {
-//        File projectDirectory = Paths.get(gitRepoPath, "project", projectName).toFile();
-//
-//        if (!projectDirectory.exists()) {
-//            if (projectDirectory.mkdirs()) {
-//                try (Repository repository = FileRepositoryBuilder.create(new File(projectDirectory, ".git"))) {
-//                    repository.create();
-//                }
-//            }
-//        }
-//    }
 
     // Create a new project and a JSON file in the "Data" folder
     public void createNewProject(String projectName, String filename) throws IOException {
@@ -70,38 +56,10 @@ public class GitService {
                 }
             }
         }
+        updateMetadataFile("Data/"+projectName);
     }
 
 
-//    public void createNewProject(String projectName) throws IOException {
-//        File dataDirectory = Paths.get(gitRepoPath, "Data").toFile();
-//        File jsonFile = Paths.get(dataDirectory.toString(), projectName + ".json").toFile();
-//
-//        if (!jsonFile.exists()) {
-//            if (jsonFile.createNewFile()) {
-//                try (Repository repository = FileRepositoryBuilder.create(new File(dataDirectory, ".git"))) {
-//                    repository.create();
-//                }
-//            }
-//        }
-//    }
-//
-//    public void createNewProject(String projectName) throws IOException {
-//        System.out.println("In create");
-//        File projectDirectory = Paths.get(gitRepoPath, "Data", projectName).toFile();
-//
-//        if (!projectDirectory.exists()) {
-//            if (projectDirectory.mkdirs()) {
-//                // Create an empty JSON file with the same name as the project
-//                File jsonFile = Paths.get(projectDirectory.toString(), projectName + ".json").toFile();
-//                if (jsonFile.createNewFile()) {
-//                    try (Repository repository = FileRepositoryBuilder.create(new File(projectDirectory, ".git"))) {
-//                        repository.create();
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     public void saveJsonData(String projectName,String fileName,String jsonData ) throws IOException {
         File dataDirectory = Paths.get(gitRepoPath, "Data/"+ projectName).toFile();
@@ -127,6 +85,232 @@ public class GitService {
     }
 
 
+    // Helper method to update the metadata.json file with subfolder details and JSON files
+//    private void updateMetadataFile(String path) {
+//        // Get a list of all directories in the Data folder
+//        File dataDirectory = Paths.get(gitRepoPath, path).toFile();
+//        System.out.println(dataDirectory);
+//        if (!dataDirectory.exists() || !dataDirectory.isDirectory()) {
+//            // Handle the case when the Data folder does not exist
+//            return;
+//        }
+//
+//        // Create a JSON array to store folder details, including subfolders and JSON files
+//        JSONArray folderDetails = new JSONArray();
+//        updateMetadataFileRecursively(dataDirectory, folderDetails);
+//
+//        // Write the folder details to the metadata.json file
+//        File metadataFile = Paths.get(dataDirectory.toString(), "metadata.json").toFile();
+//        try (FileWriter fileWriter = new FileWriter(metadataFile)) {
+//            fileWriter.write(folderDetails.toJSONString());
+//        } catch (IOException e) {
+//            // Handle the exception
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    // Recursive method to update metadata with subfolder details and JSON files
+//    private void updateMetadataFileRecursively(File directory, JSONArray folderDetails) {
+//        File[] folders = directory.listFiles(File::isDirectory);
+//
+//        if (folders != null) {
+//            for (File folder : folders) {
+//                JSONObject folderInfo = new JSONObject();
+//                folderInfo.put("name", folder.getName());
+//                // Add other folder details as needed
+//
+//                // Collect JSON files in this folder
+//                JSONArray jsonFiles = new JSONArray();
+//                File[] files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
+//                if (files != null) {
+//                    for (File file : files) {
+//                        jsonFiles.add(file.getName());
+//                    }
+//                }
+//                folderInfo.put("jsonFiles", jsonFiles);
+//
+//                // Recursively add subfolder details and JSON files
+//                JSONArray subfolderDetails = new JSONArray();
+//                updateMetadataFileRecursively(folder, subfolderDetails);
+//                folderInfo.put("subfolders", subfolderDetails);
+//
+//                // Add the folder info to the JSON array
+//                folderDetails.add(folderInfo);
+//            }
+//        }
+//    }
+
+    // Helper method to update the metadata.json file with subfolder details and JSON files
+    private void updateMetadataFile(String path) {
+        // Get a list of all directories in the Data folder
+        File dataDirectory = Paths.get(gitRepoPath, path).toFile();
+        if (!dataDirectory.exists() || !dataDirectory.isDirectory()) {
+            // Handle the case when the Data folder does not exist
+            return;
+        }
+
+        // Create a JSON array to store folder details, including subfolders and JSON files
+        JSONArray folderDetails = new JSONArray();
+        updateMetadataFileRecursively(dataDirectory, folderDetails);
+
+        // Write the folder details to the metadata.json file
+        File metadataFile = Paths.get(dataDirectory.toString(), "metadata.json").toFile();
+        try (FileWriter fileWriter = new FileWriter(metadataFile)) {
+            fileWriter.write(folderDetails.toJSONString());
+        } catch (IOException e) {
+            // Handle the exception
+            e.printStackTrace();
+        }
+    }
+
+    // Recursive method to update metadata with subfolder details and JSON files
+//    private void updateMetadataFileRecursively(File directory, JSONArray folderDetails) {
+//        File[] folders = directory.listFiles(File::isDirectory);
+//        if (folders != null) {
+//            for (File folder : folders) {
+//                JSONObject folderInfo = new JSONObject();
+//                folderInfo.put("name", folder.getName());
+//                // Add other folder details as needed
+//
+//                // Collect JSON files in this folder
+//                JSONArray jsonFiles = new JSONArray();
+//                File[] files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
+//                if (files != null) {
+//                    for (File file : files) {
+//                        jsonFiles.add(file.getName());
+//                    }
+//                }
+//                folderInfo.put("jsonFiles", jsonFiles);
+//
+//                // Recursively add subfolder details and JSON files
+//                JSONArray subfolderDetails = new JSONArray();
+//                updateMetadataFileRecursively(folder, subfolderDetails);
+//                folderInfo.put("subfolders", subfolderDetails);
+//
+//                // Add the folder info to the JSON array
+//                folderDetails.add(folderInfo);
+//
+//                // Create metadata.json in subfolder
+//                File subfolderMetadataFile = Paths.get(folder.toString(), "metadata.json").toFile();
+//                try (FileWriter subfolderFileWriter = new FileWriter(subfolderMetadataFile)) {
+//                    subfolderFileWriter.write(folderInfo.toJSONString());
+//                } catch (IOException e) {
+//                    // Handle the exception
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
+
+
+    // Recursive method to update metadata with subfolder details and JSON files including their data
+    private void updateMetadataFileRecursively(File directory, JSONArray folderDetails) {
+        File[] folders = directory.listFiles(File::isDirectory);
+        if (folders != null) {
+            for (File folder : folders) {
+                JSONObject folderInfo = new JSONObject();
+                folderInfo.put("name", folder.getName());
+                // Add other folder details as needed
+
+                // Collect JSON files and their data in this folder
+                JSONArray jsonFiles = new JSONArray();
+                File[] files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".json"));
+                if (files != null) {
+                    for (File file : files) {
+                        JSONObject jsonFileData = new JSONObject();
+                        String fileName = file.getName();
+                        jsonFileData.put("name", fileName);
+
+                        // Read the data from the JSON file and add it to the JSON object
+                        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+                            String line;
+                            StringBuilder jsonData = new StringBuilder();
+                            while ((line = br.readLine()) != null) {
+                                jsonData.append(line);
+                            }
+                            jsonFileData.put("data", jsonData.toString());
+                        } catch (IOException e) {
+                            // Handle the exception when reading JSON data
+                            e.printStackTrace();
+                        }
+
+                        jsonFiles.add(jsonFileData);
+                    }
+                }
+                folderInfo.put("jsonFiles", jsonFiles);
+
+                // Recursively add subfolder details and JSON files with data
+                JSONArray subfolderDetails = new JSONArray();
+                updateMetadataFileRecursively(folder, subfolderDetails);
+                folderInfo.put("subfolders", subfolderDetails);
+
+                // Add the folder info to the JSON array
+                folderDetails.add(folderInfo);
+
+                // Create metadata.json in subfolder
+                File subfolderMetadataFile = Paths.get(folder.toString(), "metadata.json").toFile();
+                try (FileWriter subfolderFileWriter = new FileWriter(subfolderMetadataFile)) {
+                    subfolderFileWriter.write(folderInfo.toJSONString());
+                } catch (IOException e) {
+                    // Handle the exception
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------
+
+
+
+
+
+    // Helper method to update the metadata.json file
+    // Helper method to update the metadata.json file with subfolder details
+//    private void updateMetadataFile() {
+//        // Get a list of all directories in the Data folder
+//        File dataDirectory = Paths.get(gitRepoPath, "Data").toFile();
+//        if (!dataDirectory.exists() || !dataDirectory.isDirectory()) {
+//            // Handle the case when the Data folder does not exist
+//            return;
+//        }
+//
+//        // Create a JSON array to store folder details, including subfolders
+//        JSONArray folderDetails = new JSONArray();
+//        updateMetadataFileRecursively(dataDirectory, folderDetails);
+//
+//        // Write the folder details to the metadata.json file
+//        File metadataFile = Paths.get(dataDirectory.toString(), "metadata.json").toFile();
+//        try (FileWriter fileWriter = new FileWriter(metadataFile)) {
+//            fileWriter.write(folderDetails.toJSONString());
+//        } catch (IOException e) {
+//            // Handle the exception
+//            e.printStackTrace();
+//        }
+//    }
+//
+//
+//    // Recursive method to update metadata with subfolder details
+//    private void updateMetadataFileRecursively(File directory, JSONArray folderDetails) {
+//        File[] folders = directory.listFiles(File::isDirectory);
+//
+//        if (folders != null) {
+//            for (File folder : folders) {
+//                JSONObject folderInfo = new JSONObject();
+//                folderInfo.put("name", folder.getName());
+//                // Add other folder details as needed
+//
+//                // Recursively add subfolder details
+//                JSONArray subfolderDetails = new JSONArray();
+//                updateMetadataFileRecursively(folder, subfolderDetails);
+//                folderInfo.put("subfolders", subfolderDetails);
+//
+//                // Add the folder info to the JSON array
+//                folderDetails.add(folderInfo);
+//            }
+//        }
+//    }
+
     // Create a project-specific folder in the "Data" directory
     public void createNewProjectFolder(String projectName) throws IOException {
         File dataDirectory = Paths.get(gitRepoPath, "Data").toFile();
@@ -136,6 +320,7 @@ public class GitService {
             if (projectFolder.mkdirs()) {
                 // You can also create a default JSON file if needed
             }
+            updateMetadataFile("Data");
         }
     }
 
@@ -256,44 +441,9 @@ public class GitService {
     }
 
 
-//    public String listFoldersInGitHubDirectory(String owner, String repo, String path) {
-//        String branchName = "main"; // Adjust the branch name if necessary
-//        String url = String.format("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, path);
-//
-//        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-//        if (response.getStatusCode().is2xxSuccessful()) {
-//            // Parse the response JSON to extract folder names
-//            JSONArray responseArray = new JSONArray();
-//
-//            List<String> folderNames = new ArrayList<>();
-//            for (int i = 0; i < responseArray.size(); i++) {
-//                JSONObject item = responseArray.getJSONObject(i);
-//                if (item.has("type") && item.getString("type").equals("dir")) {
-//                    folderNames.add(item.getString("name"));
-//                }
-//            }
-//            return String.join(", ", folderNames);
-//        } else {
-//            // Handle the error or log the response status and body
-//            return "Error: " + response.getStatusCode() + " - " + response.getBody();
-//        }
-//    }
 
 
 
-
-
-
-
-
-
-    // Save JSON data to a project's JSON file
-//    public void saveJsonData(String projectName, String fileName, String jsonData) throws Exception {
-//        File projectDirectory = Paths.get(gitRepoPath, "project", projectName).toFile();
-//        File jsonFile = Paths.get(projectDirectory.toString(), fileName).toFile();
-//
-//        // Implement code to write jsonData to the jsonFile
-//    }
 
     // Get JSON data from a project's JSON file
     public String getJsonData(String projectName, String fileName) throws IOException {
